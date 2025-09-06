@@ -1,64 +1,27 @@
 import Stripe from "stripe";
 
 export default async ({ req, res, log, error }) => {
+  const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+  const sig = req.headers['stripe-signature'];
   try {
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const event = stripe.webhooks.constructEvent(
+      req.rawBody,
+      sig,
+      'whsec_BS6YfehkeffODRlpVCqDvlRAcWz78HgT'
+    );
 
-    let body;
-    try {
-      body = JSON.parse(req.body || "{}");
-    } catch (parseError) {
-      error("Invalid JSON body: " + parseError.message);
-      body = {}; // fallback to empty object
+    switch (event.type) {
+      case 'checkout.session.completed':
+        log(`Payment completed: ${event.data.object.id}`);
+        break;
+      default:
+        log(`Unhandled event type: ${event.type}`);
     }
 
-    // --- 1️⃣ Handle webhook events first ---
-    if (body.type) {
-      const event = body;
-
-      try {
-        switch (event.type) {
-          case 'payment_intent.succeeded':
-            log(`Payment succeeded: ${event.data.object.id}`);
-            break;
-
-          case 'payment_intent.payment_failed':
-            log(`Payment failed: ${event.data.object.id}`);
-            break;
-
-          default:
-            log(`Unhandled event type: ${event.type}`);
-        }
-
-        return res.json({ received: true });
-      } catch (webhookError) {
-        error("Webhook handling failed: " + webhookError.message);
-        return res.json({ error: webhookError.message });
-      }
-    }
-
-    // --- 2️⃣ Handle PaymentIntent creation ---
-    // Use dummy params if not provided
-    const amount = typeof body.amount === "number" && body.amount > 0 ? body.amount : 100; // $1.00
-    const currency = typeof body.currency === "string" && body.currency.length === 3 ? body.currency : "usd";
-
-    try {
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount,
-        currency,
-        payment_method_types: ['card'],
-      });
-
-      log(`Created PaymentIntent: ${paymentIntent.id}`);
-
-      return res.json({ paymentIntentId: paymentIntent.id, amount, currency });
-    } catch (stripeError) {
-      error("Stripe PaymentIntent creation failed: " + stripeError.message);
-      return res.json({ error: stripeError.message });
-    }
-
+    return res.status(200).json({ received: true });
   } catch (err) {
-    error("Unexpected error: " + err.message);
-    return res.json({ error: "Internal server error" });
+    error("Webhook error: " + err.message);
+    return res.status(400).json({ error: err.message });
   }
 };
