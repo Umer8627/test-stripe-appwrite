@@ -1,15 +1,25 @@
-module.exports = async function (req, res) {
-  console.log("Function started ✅", req.method);
-
+// src/main.js
+export default async ({ req, res, log, error }) => {
   try {
-    if (req.method === "GET") {
-      return res.json({ success: true, message: "Hello from Appwrite 🚀" });
+    log(`Function started ✅ method=${req.method}`);
+
+    // Simple GET health check
+    if (req.method === 'GET') {
+      return res.json({ ok: true, message: 'Hello from Appwrite 🚀' });
     }
 
-    const data = JSON.parse(req.body || "{}");
-    res.json({ success: true, data });
-  } catch (err) {
-    console.error("Function Error:", err);
-    res.status(500).json({ error: err.message });
+    // For SDK/POST calls, echo back the JSON body
+    let data = {};
+    try {
+      data = req.bodyJson ?? {};
+    } catch (_) {
+      data = {};
+    }
+
+    return res.json({ ok: true, method: req.method, data });
+  } catch (e) {
+    error(String(e));
+    // keep it simple; default 200 is fine for quick test
+    return res.json({ ok: false, error: String(e) });
   }
 };
