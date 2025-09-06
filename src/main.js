@@ -1,17 +1,11 @@
+// functions/stripe.js
 import Stripe from 'stripe';
 
-/**
- * Appwrite function
- * - POST with {amount, currency}  → creates Checkout Session and returns session.url
- * - Stripe will call this same URL for webhooks if you set it in your Stripe dashboard
- */
 export default async ({ req, res, log, error }) => {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-  // For Stripe webhooks you need the raw body:
+  // Check if this is a Stripe webhook call
   const sig = req.headers['stripe-signature'];
-
-  // If this is a webhook call from Stripe
   if (sig) {
     try {
       const event = stripe.webhooks.constructEvent(
@@ -23,7 +17,7 @@ export default async ({ req, res, log, error }) => {
       switch (event.type) {
         case 'checkout.session.completed':
           log(`Payment completed: ${event.data.object.id}`);
-          // TODO: update your database for success here
+          // Update your DB here
           break;
         default:
           log(`Unhandled event type: ${event.type}`);
@@ -36,15 +30,14 @@ export default async ({ req, res, log, error }) => {
     }
   }
 
-  // Otherwise, treat it as a create-checkout-session call
+  // Otherwise, handle your Flutter Web request to create a Checkout Session
   try {
     const { amount, currency } = JSON.parse(req.body || '{}');
-
     if (!amount || !currency) {
       return res.status(400).json({ error: 'amount and currency required' });
     }
 
-    // Create Stripe Checkout Session
+    // Replace these with your actual URLs
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -52,14 +45,14 @@ export default async ({ req, res, log, error }) => {
           price_data: {
             currency,
             product_data: { name: 'Payment' },
-            unit_amount: amount, // smallest currency unit (e.g. cents)
+            unit_amount: amount,
           },
           quantity: 1,
         },
       ],
       mode: 'payment',
-      success_url: 'https://yourapp.com/success',
-      cancel_url: 'https://yourapp.com/cancel',
+      success_url: 'https://myapp.com/', // <== your real app URL here
+      cancel_url: 'https://myapp.com/',  // <== your real app URL here
     });
 
     log(`Created Checkout Session: ${session.id}`);
