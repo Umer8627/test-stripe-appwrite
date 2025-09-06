@@ -1,41 +1,18 @@
+// index.js
 import Stripe from 'stripe';
 
 export default async ({ req, res, log, error }) => {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-  // Handle webhook calls
-  const sig = req.headers['stripe-signature'];
-  if (sig) {
-    try {
-      const event = stripe.webhooks.constructEvent(
-        req.rawBody,
-        sig,
-        process.env.STRIPE_WEBHOOK_SECRET
-      );
-
-      switch (event.type) {
-        case 'checkout.session.completed':
-          log(`Payment completed: ${event.data.object.id}`);
-          break;
-        default:
-          log(`Unhandled event type: ${event.type}`);
-      }
-
-      return res.status(200).json({ received: true });
-    } catch (err) {
-      error('Webhook error: ' + err.message);
-      return res.status(400).json({ error: err.message });
-    }
-  }
-
-  // Otherwise handle create checkout session
   try {
+    // Parse JSON body coming from Flutter
     const { amount, currency } = JSON.parse(req.body || '{}');
 
     if (!amount || !currency) {
       return res.status(400).json({ error: 'amount and currency required' });
     }
 
+    // Create a Stripe Checkout Session
     const session = await stripe.checkout.sessions.create({
       payment_method_types: ['card'],
       line_items: [
@@ -43,19 +20,21 @@ export default async ({ req, res, log, error }) => {
           price_data: {
             currency,
             product_data: { name: 'Payment' },
-            unit_amount: amount,
+            unit_amount: amount, // in smallest currency unit (e.g. cents)
           },
           quantity: 1,
         },
       ],
       mode: 'payment',
-      success_url: 'https://myapp.com/',
-      cancel_url: 'https://myapp.com/',
+
+      // URLs to send the customer after payment or cancel
+      success_url: 'https://example.com/payment-success',
+      cancel_url: 'https://example.com/payment-cancel',
     });
 
     log(`Created Checkout Session: ${session.id}`);
 
-    // ✅ always return JSON here
+    // Return JSON to Flutter
     return res.status(200).json({ checkoutUrl: session.url });
   } catch (err) {
     error('Error creating Checkout Session: ' + err.message);
