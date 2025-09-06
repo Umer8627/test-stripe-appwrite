@@ -5,10 +5,10 @@ export default async ({ req, res, log, error }) => {
   const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
   try {
-    const { amount, currency } = JSON.parse(req.body || '{}');
+    const { amount, currency, id } = JSON.parse(req.body || '{}');
 
-    if (!amount || !currency) {
-      return res.send(JSON.stringify({ error: 'Missing amount or currency' }), 400);
+    if (!amount || !currency || !id) {
+      return res.send(JSON.stringify({ error: 'Missing amount, currency or id' }), 400);
     }
 
     // create Checkout Session
@@ -23,8 +23,9 @@ export default async ({ req, res, log, error }) => {
         quantity: 1,
       }],
       mode: 'payment',
-      success_url: 'https://yourapp.com/success',  // your redirect URL
-      cancel_url: 'https://yourapp.com/cancel',    // your redirect URL
+      success_url: `http://localhost:63496/payment-success/${id}`,  // id appended in path
+      // OR if you prefer query param: `http://localhost:63496/payment-success?id=${id}`,
+      cancel_url: 'http://localhost:63496/payment-cancel',
     });
 
     log(`Created session: ${session.id}`);
