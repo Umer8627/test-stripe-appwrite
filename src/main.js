@@ -23,9 +23,9 @@ export default async ({ req, res, log, error }) => {
         quantity: 1,
       }],
       mode: 'payment',
-      success_url: `http://localhost:63496/payment-success/${id}`,  // id appended in path
+      success_url: `https://dog-homeschool.web.app/payment-success/${id}`,  // id appended in path
       // OR if you prefer query param: `http://localhost:63496/payment-success?id=${id}`,
-      cancel_url: 'http://localhost:63496/payment-cancel',
+      cancel_url: 'https://dog-homeschool.web.app/payment-cancel',
     });
 
     log(`Created session: ${session.id}`);
