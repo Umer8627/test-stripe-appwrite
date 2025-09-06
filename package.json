@@ -1,8 +1,16 @@
 {
-  "name": "stripe-function",
+  "name": "starter-template",
   "version": "1.0.0",
+  "description": "",
+  "main": "src/main.js",
   "type": "module",
+  "scripts": {
+    "format": "prettier --write ."
+  },
   "dependencies": {
-    "stripe": "^12.0.0"
+    "node-appwrite": "^14.1.0"
+  },
+  "devDependencies": {
+    "prettier": "^3.2.5"
   }
 }
