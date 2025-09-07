@@ -23,9 +23,9 @@ export default async ({ req, res, log, error }) => {
         quantity: 1,
       }],
       mode: 'payment',
-      success_url: `http://localhost:63612/payment-success/${id}`,  // id appended in path
+      success_url: `http://localhost:63584/payment-success/${id}`,  // id appended in path
       // OR if you prefer query param: `http://localhost:63496/payment-success?id=${id}`,
-      cancel_url: `http://localhost:63612/payment-cancel/${id}`,
+      cancel_url: `http://localhost:63584/payment-cancel/${id}`,
     });
 
     log(`Created session: ${session.id}`);
