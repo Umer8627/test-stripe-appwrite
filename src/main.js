@@ -36,8 +36,8 @@ export default async ({ req, res, log, error }) => {
       });
 
       // Now update URLs with the actual session ID
-      const successUrl = `http://localhost:64426/payment-success/${id}?session_id=${session.id}`;
-      const cancelUrl = `http://localhost:64426/payment-cancel/${id}?session_id=${session.id}`;
+      success_url: `http://localhost:64426/payment-success/${id}?session_id={CHECKOUT_SESSION_ID}`,
+  cancel_url: `http://localhost:64426/payment-cancel/${id}?session_id={CHECKOUT_SESSION_ID}`,
 
       // (Optional) If your Stripe version allows, you can directly pass success_url and cancel_url in create()
       // But generally you need them at creation time, so another option is to build the URLs before passing the session.
