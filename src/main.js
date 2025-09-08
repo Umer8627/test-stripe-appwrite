@@ -25,8 +25,8 @@ export default async ({ req, res, log, error }) => {
           },
         ],
         mode: 'payment',
-        success_url: `http://localhost:57650/payment-success/${id}?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `http://localhost:57650/payment-cancel/${id}?session_id={CHECKOUT_SESSION_ID}`,
+        success_url: `http://localhost:51798/payment-success/${id}?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `http://localhost:51798/payment-cancel/${id}?session_id={CHECKOUT_SESSION_ID}`,
       });
 
       log(`Created session: ${session.id}, payment_intent: ${session.payment_intent}`);
